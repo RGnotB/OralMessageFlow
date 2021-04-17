@@ -1,0 +1,50 @@
+NUMNODES=4
+BADNODES=1
+C_TRAITOR=0
+VALUE=1
+CYCLES = BADNODES + 3
+#the number of cycles:
+#cycle 0-->NUMBADNODES-1 => OralMessage algoritm (OralMessage protocol)
+#cycle NUMBADNODES => Majority function (Majority protocol)
+#cycle NUMBADNODES + 1 => check situation (FinalControl control)
+#cycle NUMBADNODES +2 => create the JSON file for the Graphic Interface(JSON CONTROL)
+simulation.cycles CYCLES
+
+network.size 0
+
+network.node ByzantineNode
+
+
+
+#======INITIALIZER======
+init.initial Initializer
+#the number of nodes
+init.initial.nodes NUMNODES
+#the number of traitors
+init.initial.badnodes BADNODES
+#the order that the commander want to share (if is loyal)
+init.initial.commander_value VALUE
+#establish if the commander is a traitor 
+# 1 => is a traitor 
+# else => is loyal 
+init.initial.commander_is_traitor C_TRAITOR
+#the method of traitor to send the value
+#must be "OPPOSITE" or "RANDOM"
+init.initial.traitor_method OPPOSITE
+init.initial.traitor_commander_method RANDOM
+
+#======PROTOCOLS======
+protocol.MJ Majority
+protocol.MJ.badnodes BADNODES
+#======CONTROLS======
+control.OM OralMessage
+control.OM.nodes NUMNODES
+control.OM.badnodes BADNODES
+
+control.FC FinalControl
+control.FC.badnodes BADNODES
+
+control.JC JsonControl
+control.JC.badnodes BADNODES
+
+

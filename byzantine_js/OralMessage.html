@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link type="text/css" rel="stylesheet" href="mystyle.css">
+  <script src="jquery-main/dist/jquery.js"></script>
+  <script src="cytoscape.js-master/dist/cytoscape.min.js"></script>
+  <script src="style.js"></script>
+  <title>OralMessages</title>
+<script>
+  let NUM_NODES;//number of nodes in the network
+  let final_order;//The final order reached by Network
+  let id_label;//label print on final step
+  let traitors;//array of the ID of traitors
+  let commander_is_traitor = false; //true if the Commander is traitor
+  let commander_value;//value sent by commander
+  let TIME = 500;//Time to wait until an animation and the other
+  let cy;//The graph of the network
+  let lieutenant_cy;//the graph of a lieutenant to decide the final value
+  let messages;//All messages sent on the algoritm
+  let lieutenant_messages_receive = [];//the i element of this vector represent the number of messages receive by lieutenant i
+  let cycle = 0;//cycle of simulation
+  let INFO = [];//array of information that save the information to stop and restart sending messages
+
+  //function to create the graph
+  function setNodes(){
+    lieutenant_messages_receive = [NUM_NODES-1];
+    document.getElementById("graph_creator").remove();
+    //create the graph with only the Commander
+    cy = cytoscape({
+          container: document.getElementById('cy'),
+          elements: [
+            { data: { id: 'Commander' } },
+          ],
+
+          style: [
+            {
+              selector: 'node',
+              style: {
+                shape: 'ellipse',
+                'width': '40',
+                'height': '40',
+                'background-color': '#66ff33',
+                'border-width': 1.5,
+                label: 'data(id)',
+              }
+            }]
+        });
+
+    if(traitors[0] == 0) {//check if the commander is a traitor
+      commander_is_traitor = true;
+      cy.nodes('[id = "Commander"]').style({'background-color': '#f54949'});
+    }
+
+    let is_loyal = true;
+
+    //create the Lieutenant's node
+    for (let i = 1; i < NUM_NODES; i++) {
+      is_loyal = true;
+      //check if is loyal
+      for(let t = 0; t < traitors.length; t++){
+        if(i == traitors[t]){
+          is_loyal = false;
+        }
+      }
+      if(!is_loyal){
+        cy.add({
+          data: { id: 'Lieutenant ' + i },
+          style:{
+            'background-color': '#f54949'
+          }
+        });
+      }else{
+        cy.add({
+          data: { id: 'Lieutenant ' + i },
+          style:{
+            'background-color': '#66ff33'
+          }
+        });
+      }
+
+      //create an edge between Lieutenant and COmmander
+      const source = 'Lieutenant ' + i;
+      cy.add({
+        data: {
+          id: 'edge' + i,
+          source: source,
+          target: ('Commander')
+        },
+        style: {
+          'line-color': 'black',
+          'opacity' : '0.5',
+        }
+      });
+    }
+    cy.layout({
+      name: 'circle'
+    }).run();
+
+
+    //Create edges between all lieutenants
+    for (let i = 1; i < NUM_NODES; i++) {
+      const source = 'Lieutenant ' + i;
+      for(let j = 1; j < NUM_NODES; j++){
+        if(i!=j){
+          cy.add({
+            data: {
+              id: 'edge' + i + ',' +j,
+              source: source,
+              target: 'Lieutenant ' + j
+            },
+            style: {
+              'opacity' : '0.25',
+              'line-color': 'black',
+            }
+          });
+        }
+
+      }
+    }
+
+    //Show buttons
+    document.getElementById("sender").style.display = "inline";
+    document.getElementById("skipMessages").style.display = "inline";
+  }
+
+  //function to simulate the first step of OralMessage OM(f)
+  async function firstStep() {
+    //HIDE buttons
+    document.getElementById("skipMessages").style.display = "none";
+    document.getElementById("sender").style.display = "none";
+
+    //get coordinates of the commander
+    let xC = cy.$('#Commander').position('x');
+    let yC = cy.$('#Commander').position('y');
+
+    //declaring variables
+    let edge, lieutenant, msg, xGoal, yGoal, mid, j, value, label;
+    let info = [];
+    let tmp_info = [];
+    let points = [];
+    let color = '#66ff33';
+    let lieutenant_messages;
+    //create ALL informations of messages sent in first cycle
+    for (let i = 0; i < NUM_NODES-1; i++) {//for all lieutenants
+      lieutenant_messages = messages[i];//get messages of lieutenant
+      value = lieutenant_messages[0].value;//get the value of the message
+      j= i+1; //j is the ID of the lieutenant receiver
+      label = value + ',0' + j; //label printed on the msg
+      msg = '';
+      msg += j; //the message's ID
+      lieutenant_messages_receive[i] = 0;
+      edge = 'edge' + j;//the edge where I want send the message
+      lieutenant = 'Lieutenant ' + j; //Lieutenant receiver
+      //get coordinates of lieutenant receiver
+      xGoal = cy.getElementById(lieutenant).position('x');
+      yGoal = cy.getElementById(lieutenant).position('y');
+      //check if the commander is traitor to change the color of the message
+      if(commander_is_traitor){
+        color = '#f54949';
+      }
+      //create the node that represent the message
+      cy.add({
+        data: {
+          id: msg,
+        },
+        position: {x: xC, y: yC},
+        style: {
+          'display': 'none',
+          'width': '50',
+          'height': '22',
+          shape: 'square',
+          'background-color': 'white',
+          'border-width': 1,
+          'border-color': color,
+          'text-halign': 'center',
+          'text-valign': 'center',
+          'label': label,
+        }
+      });
+
+      //enter all the information on the array
+      tmp_info.push(!commander_is_traitor);
+      tmp_info.push(msg);
+      tmp_info.push(edge);
+      points.push(xC);
+      points.push(yC);
+      mid = cy.getElementById(edge).midpoint();
+      points.push(mid.x);
+      points.push(mid.y);
+      points.push(xGoal);
+      points.push(yGoal);
+      tmp_info.push(points);
+      info.push(tmp_info);
+      tmp_info= [];
+      points =[];
+    }
+
+    //increase the cycle
+    cycle++;
+    sends(info);
+  }
+
+  //function to simulate a generic cycle of OralMessage( OM(f-1), ..., OM(0) )
+  function nextStep(){
+    //HIDE buttons
+    document.getElementById("skipMessages").style.display = "none";
+    document.getElementById("nextStep").style.display = 'none';
+    let edge_name
+
+    //change color of all edges
+    for (let i = 1; i < NUM_NODES; i++) {
+      for(let j = 1; j < NUM_NODES; j++){
+        edge_name = 'edge' + i + ',' + j;
+        cy.getElementById(edge_name).style({
+          'line-color': 'black',
+          'opacity' : '0.25',
+        });
+      }
+    }
+
+    //declaring variables
+    let node_name, msg, second_node_name, lieutenant_messages, senders, lieutenant_sender, message, j, label;
+    let info = [];
+    let node_cordinates = [];
+    let tmp_info = [];
+    let mid_cordinates = [];
+    let sender_cordinates = [];
+    let  messages_to_send= [];
+    let points = [];
+    let is_loyal = true;
+
+    //create ALL informations of messages sented in this cycle
+    for(let i = 0; i < NUM_NODES-1; i++) {//for all lieutenants
+      j= i+1; // Lieutenant ID
+      is_loyal = true;
+      for(let t = 0; t < traitors.length; t++){//check if this lieutenant is a traitor
+        if(j == traitors[t]){
+          is_loyal = false;
+          break;
+        }
+      }
+      node_name = "Lieutenant " + j;
+      node_cordinates = cy.getElementById(node_name).position();
+      lieutenant_messages = messages[i];
+      for(let z = 0; z < lieutenant_messages.length; z++){//get all messages sended in this cycle
+        if(lieutenant_messages[z].cycle == cycle){
+          messages_to_send.push(lieutenant_messages[z]);
+        }
+      }
+
+      while(messages_to_send.length > 0) {
+          msg = messages_to_send.pop();//get a message
+          senders = msg.senders;//get the senders of the message
+          lieutenant_sender = senders[senders.length-1]; //get the last sender
+          second_node_name = "Lieutenant " + lieutenant_sender;//get the ID of the sender
+          edge_name = "edge" + lieutenant_sender + ',' + j; //get the name of the edge between the sender and receiver
+          lieutenant_messages_receive[i] = lieutenant_messages_receive[i] + 1; //increase the number of messages receive
+          message ='';
+          message += j.toString() + lieutenant_messages_receive[i].toString();//create the id of the message;
+          label = msg.value + ',[' + senders +']';//the label printed on the message node
+          sender_cordinates = cy.getElementById(second_node_name).position();
+          //create the node that represent the message
+          cy.add({
+            data: {
+              id: message,
+            },
+            position: {x: sender_cordinates.x, y: sender_cordinates.y},
+            style: {
+              'display': 'none',
+              'width': '65',
+              'height': '22',
+              shape: 'square',
+              'background-color': 'white',
+              'border-width': 1,
+              'border-color': '#fff533',
+              'text-halign': 'center',
+              'text-valign': 'center',
+              label: label,
+            }
+          });
+
+        //insert all the information of messages
+        if(lieutenant_sender != j){
+          tmp_info.push(is_loyal);
+          tmp_info.push(message);
+          tmp_info.push(edge_name);
+          points.push(sender_cordinates.x);
+          points.push(sender_cordinates.y);
+          mid_cordinates = cy.getElementById(edge_name).midpoint();
+          points.push(mid_cordinates.x);
+          points.push(mid_cordinates.y);
+          points.push(node_cordinates.x);
+          points.push(node_cordinates.y);
+          tmp_info.push(points);
+          info.push(tmp_info);
+        }
+          points = [];
+          tmp_info = [];
+
+      }
+    }
+    //increase the cycle
+    cycle++;
+    sends(info);
+  }
+
+  //the function
+  async function sends(infos){
+    //show buttons to increase and decrease speed of animation
+    document.getElementById("increase_speed").style.display = 'inline';
+    document.getElementById("decrease_speed").style.display = 'inline';
+    //hide button
+    document.getElementById("restart").style.display = "none";
+    let stop = false;
+    let name_node;
+    let is_loyal, edge;
+    let num_cycles = infos.length;
+    for(let j = 0; j < num_cycles; j++) {//for all messages that are sent in this cycle
+        if(!stop){
+
+          //take the information for the animation of message sending
+          let tmp_info = infos.shift();
+        is_loyal = tmp_info.shift();
+        name_node = tmp_info.shift();
+        edge = tmp_info.shift();
+        if (is_loyal) {
+          cy.getElementById(edge).style({
+            'opacity': '0.1',
+            'line-color': 'green',
+          });
+        } else {
+          cy.getElementById(edge).style({
+            'line-color': 'red',
+          });
+        }
+        let points = tmp_info.shift();
+
+        //add the event listener on the graph to stop the animation
+        cy.on('click', function (e) {
+          clickOnGraphHandler(infos);
+          document.getElementById("increase_speed").style.display = 'none';
+          document.getElementById("decrease_speed").style.display = 'none';
+          stop = true;
+        });
+
+        //send the message
+        animation(name_node, points);
+        //sleep for TIME * points.length between an animation and the next
+        await sleep(TIME * points.length);
+      }else{
+          break;
+        }
+    }
+
+
+    if(cycle<traitors.length+1 && !stop){//if there are other cycles to simulate
+      document.getElementById("nextStep").style.display = "inline";
+    }else if(!stop){//if the user had click on the graph
+      document.getElementById("nextStep").style.display = "none";
+      document.getElementById("restart").remove();
+      cy.removeListener('click');
+      showResults();
+    }
+
+    //hide the buttons for increase and decrease speed
+    document.getElementById("increase_speed").style.display = 'none';
+    document.getElementById("decrease_speed").style.display = 'none';
+  }
+
+  //function to change the position of the message
+  function change_Position(tmp_msg, tmp_points) {
+    let tmp_x = tmp_points[0];
+    tmp_points.shift();
+    let tmp_y = tmp_points[0];
+    tmp_points.shift();
+    cy.getElementById(tmp_msg).position({
+      y: tmp_y,
+      x: tmp_x
+    });
+  }
+
+  //funtion to print the message and move it
+  function animation(tmp_msg, tmp_points) {
+    cy.getElementById(tmp_msg).style({
+      display: 'element',});
+    change_Position(tmp_msg, tmp_points);
+    setTimeout(function () {
+      if (tmp_points.length > 0) {
+        animation(tmp_msg,tmp_points);
+      }
+    }, TIME);
+  }
+
+  //function to reset the drop area if it isn't passed a JSON file
+  async function resetDropArea(){
+    await sleep(1000);
+    const droparea = document.querySelector(".droparea");
+    droparea.innerText = "Drop a valid JSON file here";
+    droparea.classList.remove("invalid");
+  }
+
+  //function to setup all
+  function setupAll(tmp){
+    //remove the drop area
+    document.getElementById("drop").remove();
+    //remove the home title
+    document.getElementById("home_title").remove();
+    //show the graph
+    document.getElementById("cy").style.display = "inline";
+    //get the variables by the JSON file
+    NUM_NODES = tmp.num_nodes;
+    messages = tmp.messages;
+    commander_value = tmp.commander_value;
+    final_order = tmp.final_value;
+
+    if(tmp.traitors[0] == 0){//if commander is traitors
+      commander_is_traitor = true;
+    }else{
+      commander_is_traitor = false;
+    }
+    traitors = tmp.traitors;
+    //create the graph
+    setNodes();
+  }
+
+  //function for print the right result
+  async function showResults(){
+    //Hide the buttons
+    document.getElementById("increase_speed").style.display = 'none';
+    document.getElementById("decrease_speed").style.display = 'none';
+    document.getElementById("sender").style.display = "none";
+    document.getElementById("skipMessages").style.display = "none";
+    await sleep(500);
+
+    //check what label we have to print
+    if(commander_value == 1 && final_order == commander_value){
+      document.getElementById("attack_results").style.display = "inline";
+      id_label = "attack_results";
+    }else if (commander_value == 0  && final_order == commander_value){
+      document.getElementById("retreat_results").style.display = "inline";
+      id_label = "retreat_results";
+    } else if(commander_value == 1 && final_order != commander_value && final_order!= -1){
+      document.getElementById("fail_attack_results").style.display = "inline";
+      id_label = "fail_attack_results";
+    } else if(commander_value == 0 && final_order != commander_value && final_order!= -1){
+      document.getElementById("fail_retreat_results").style.display = "inline";
+      id_label = "fail_retreat_results";
+    } else if(final_order == 1){
+      document.getElementById("attack_results").style.display = "inline";
+      id_label = "attack_results";
+    }else if(final_order == 0){
+      document.getElementById("retreat_results").style.display = "inline";
+      id_label = "retreat_results";
+    }else{
+      document.getElementById("traitors_win_results").style.display = "inline";
+      id_label = "traitors_win_results";
+    }
+
+    let j, tmp_msg;
+    //Hide all messages
+    for(let i = 0; i < NUM_NODES; i++){
+      j = i+1;
+      tmp_msg = j.toString();
+      cy.getElementById(tmp_msg).style({ display: 'none'});
+      for(let z = 0; z <= lieutenant_messages_receive[i]; z++){
+        tmp_msg = j.toString() + z.toString();
+        cy.getElementById(tmp_msg).style({ display: 'none'});
+      }
+    }
+
+    //add event listener on Lieutenant
+    cy.on('click', 'node', function(e){
+      if(this.id()!='Commander' && this.id()[0] == 'L'){
+        document.getElementById("cy").style.display = "none";
+        document.getElementById(id_label).style.display = "none";
+        document.getElementById("lieutenant_cy").style.display = "inline";
+        document.getElementById("back").style.display = "inline";
+        createResultGraph(this.id());
+      }
+    });
+  }
+
+  //function to create the graph of a Lieutenant
+  function createResultGraph(id_node){
+
+    let index = id_node[id_node.length-1] - 1; //get the ID of the lieutenant
+    let node_messages = messages[index]; //take the messages of the lieutenant
+    let tmp = node_messages[0];//take the root of the information tree of the lieutenant
+    let msg = '{ ' + tmp.value + ', [' + tmp.senders + '], ' + '? }'; //label of the message
+    let l_cycle = 0;
+    let label, parent ='';
+    let node_name = '';
+    for(s of tmp.senders){
+      node_name+=s;
+    }
+    //create the lieutenant graph
+    lieutenant_cy = cytoscape({
+      container: document.getElementById('lieutenant_cy'),
+      elements: [
+        { data: { id: node_name } },
+      ],
+      position: {x: 0, y: 0},
+      style: [
+        {
+          selector: 'node',
+          style: {
+            shape: 'square',
+            'width': '100',
+            'height': '40',
+            'background-color': 'white',
+            'border-width': 2,
+            label: msg,
+            'text-halign': 'center',
+            'text-valign': 'center',
+          }
+        }]
+    });
+    //increase the cycle of the messages
+    l_cycle++;
+    while(l_cycle <=  traitors.length) {
+      for (let i = 1; i < node_messages.length; i++) {
+        tmp = node_messages[i];
+        if(l_cycle != traitors.length){
+          label = '{' + tmp.value + ', [' + tmp.senders + '], ?}';
+        }else{
+          label = '{' + tmp.value + ', [' + tmp.senders + '], ' + tmp.finalValue + '}';
+        }
+        node_name = '';
+        for(s of tmp.senders){
+          node_name+=s;
+        }
+        if(tmp.cycle == l_cycle){
+          lieutenant_cy.add({
+            data: {
+              id: node_name,
+            },
+            style: {
+              'width': '100',
+              'height': '40',
+              shape: 'square',
+              'background-color': 'white',
+              'border-width': 1,
+              'text-halign': 'center',
+              'text-valign': 'center',
+              label: label,
+            }
+          });
+          parent = '';
+          for(let z = 0; z < (tmp.senders).length-1; z++){
+            parent+= tmp.senders[z];
+          }
+          lieutenant_cy.add({
+            data: {
+              id: 'edge' + node_name,
+              source: parent,
+              target: node_name,
+            },
+            style: {
+              'opacity' : '0.50',
+              'line-color': 'black',
+            }
+          });
+        }
+      }
+      l_cycle++;
+    }
+    lieutenant_cy.layout({
+      name: 'breadthfirst'
+    }).run();
+
+    //add a event listener on nodes for simulate majority
+    lieutenant_cy.on('click', 'node', function(e){
+      if(this.id().length - 1 != traitors.length){
+          majority(this.id(), index);
+      }
+    });
+  }
+
+  //function to simulate majority
+  function majority(id, index){
+    let cycle = id.length - 1;
+    let max = traitors.length;
+    let node_messages = messages[index];
+    let node_name;
+    let string, color;
+    let change = true;
+    while(max >= cycle){
+      for (let i = 0; i < node_messages.length; i++) {
+          tmp = node_messages[i];
+          label = '';
+          if(tmp.cycle == max){
+            node_name = '';
+            for(s of tmp.senders){
+              node_name+=s;
+            }
+            for(let j = 0; j < id.length; j++){
+              if(node_name[j] != id[j]){
+                change = false;
+                break;
+              }
+            }
+            if(change){
+              string = '{' + tmp.value + ', [' + tmp.senders + '], ' + tmp.finalValue + '}'
+              if(tmp.finalValue == 0){
+                color = 'orange';
+              }else{
+                color = 'blue';
+              }
+              lieutenant_cy.getElementById(node_name).style({
+                label: string,
+                'border-color': color,
+              });
+              string = 'edge' + node_name;
+              lieutenant_cy.getElementById(string).style({
+                'line-color': color,
+                'opacity' : '1',
+              });
+            }
+            change = true;
+          }
+      }
+      max--;
+    }
+  }
+
+  //function to hide the lieutenant messages and show the network graph
+  function showGraph(){
+    document.getElementById("lieutenant_cy").style.display = "none";
+    document.getElementById("back").style.display = "none";
+    lieutenant_cy.destroy();
+    document.getElementById("cy").style.display = "inline";
+    document.getElementById(id_label).style.display = "inline";
+  }
+
+  //function to increase speed between an animation and the next
+  function increaseSpeed(){
+    if(TIME >= 200){
+      TIME -= 100;
+    }else if (TIME > 10){
+      TIME -=10;
+    }
+  }
+
+  //function to decrease speed between an animation and the next
+  function decreaseSpeed(){
+    TIME += 100;
+  }
+
+  //function to store the information to stop the messages sending
+  function clickOnGraphHandler(infos){
+    INFO = infos;
+    document.getElementById("restart").style.display = "inline";
+    return;
+  }
+
+  //function to restart sending
+  function restart(){
+    sends(INFO);
+  }
+
+  //function to wait ms
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+</script>
+</head>
+
+<body>
+
+  <div id="drop" class = "droparea">Drop the JSON file here</div>
+  <script>
+
+    //script to get the file JSON for the information of the OralMessage
+    const droparea = document.querySelector(".droparea");
+    droparea.addEventListener("dragover", (e)=> {
+      e.preventDefault();
+      droparea.classList.add("hover");
+    });
+
+    droparea.addEventListener("dragleave", ()=> {
+      droparea.classList.remove("hover");
+    });
+
+    droparea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      let fileJSON = e.dataTransfer.files[0];
+      let reader = new FileReader();
+      const type = fileJSON.type;
+      let my_json;
+      if(type == "application/json" || type == "JSON"  || type == "json"){
+        const upload = (fileJson) => {
+          droparea.setAttribute("class", "droparea valid");
+          droparea.innerText = "Added " + fileJSON.name;
+          reader.onloadend = function(e) {
+            my_json = JSON.parse(this.result);
+            console.log(my_json);
+            setupAll(my_json);
+          };
+          reader.readAsText(fileJSON);
+        };
+        return upload(fileJSON);
+      }else{
+        droparea.setAttribute("class", "droparea invalid");
+        droparea.innerText = "Invalid fail format";
+        return resetDropArea();
+      }
+    });
+  </script>
+
+  <div id="cy"></div>
+  <div id="lieutenant_cy"></div>
+  <h1 id = "home_title"> Oral Message Flow</h1>
+  <button id= "graph_creator" onclick = "setNodes()"> Create Graph </button>
+  <button id= "sender" onclick = "firstStep()">Send Messages</button>
+  <button id= "skipMessages" onclick = "showResults()"> Skip Messages </button>
+  <button id="nextStep" onclick = "nextStep()">Next Iteration</button>
+  <button id="back" onclick = "showGraph()">Back</button>
+  <button id="restart" onclick="restart()">Restart</button>
+  <a id="increase_speed"  onclick="increaseSpeed()" href= "#" class="bottone">+</a>
+  <a id="decrease_speed"  onclick="decreaseSpeed()" href = "#" class="bottone">−</a>
+  <div class = "res" id="attack_results">
+    <h2>Loyal lieutenants have won! They reached consensus on ATTACK!</h2>
+    <h3>If you want see how the lieutenants decide the result, please click on the interested lieutenant</h3>
+  </div>
+  <div class = "res" id="retreat_results">
+    <h2>Loyal lieutenants have won! They reached consensus on RETREAT!</h2>
+    <h3>If you want see how the lieutenants decide the result, please click on the interested lieutenant</h3>
+  </div>
+  <div class = "res" id="fail_attack_results">
+    <h2>Loyal lieutenants have lost! They reached consensus on ATTACK because of the traitors</h2>
+    <h3>If you want see how the lieutenants decide the result, please click on the interested lieutenant</h3>
+  </div>
+  <div class = "res" id="fail_retreat_results">
+    <h2>Loyal lieutenants have lost! They reached consensus on RETREAT because of the traitors</h2>
+    <h3>If you want see how the lieutenants decide the result, please click on the interested lieutenant</h3>
+  </div>
+  <div class = "res" id="traitors_win_results">
+    <h2>Loyal lieutenants have lost! Consensus was not reached</h2>
+    <h3>If you want see how the lieutenants decide the result, please click on the interested lieutenant</h3>
+  </div>
+  <h6 id = "creator">Created by Giuseppe Renna</h6>
+</body>
+</html>
