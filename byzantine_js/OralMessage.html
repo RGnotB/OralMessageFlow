@@ -148,7 +148,7 @@
       j= i+1; //j is the ID of the lieutenant receiver
       label = value + ',0' + j; //label printed on the msg
       msg = '';
-      msg += j; //the message's ID
+      msg += 'm'+j; //the message's ID
       lieutenant_messages_receive[i] = 0;
       edge = 'edge' + j;//the edge where I want send the message
       lieutenant = 'Lieutenant ' + j; //Lieutenant receiver
@@ -257,7 +257,7 @@
           edge_name = "edge" + lieutenant_sender + ',' + j; //get the name of the edge between the sender and receiver
           lieutenant_messages_receive[i] = lieutenant_messages_receive[i] + 1; //increase the number of messages receive
           message ='';
-          message += j.toString() + lieutenant_messages_receive[i].toString();//create the id of the message;
+          message += 'm'+ j.toString() +'-'+ lieutenant_messages_receive[i].toString();//create the id of the message;
           label = msg.value + ',[' + senders +']';//the label printed on the message node
           sender_cordinates = cy.getElementById(second_node_name).position();
           //create the node that represent the message
@@ -461,10 +461,10 @@
     //Hide all messages
     for(let i = 0; i < NUM_NODES; i++){
       j = i+1;
-      tmp_msg = j.toString();
+      tmp_msg = 'm'+j.toString();
       cy.getElementById(tmp_msg).style({ display: 'none'});
       for(let z = 0; z <= lieutenant_messages_receive[i]; z++){
-        tmp_msg = j.toString() + z.toString();
+        tmp_msg = 'm'+j.toString()+'-' + z.toString();
         cy.getElementById(tmp_msg).style({ display: 'none'});
       }
     }
