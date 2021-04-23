@@ -17,7 +17,7 @@ Algorithm OM(0).
 - (1) The commander sends his value to every lieutenant. 
 - (2) Each lieutenant uses the value he receives from the commander, or uses the value RETREAT, that is 0, if he receives no value. 
 
-Algorithm OM(m), m > O. 
+Algorithm OM(m), m > 0. 
 
 - (1) The commander sends his value to every lieutenant. 
 - (2) For each i, let Vi be the value Lieutenant i receives from the commander, or else be RETREAT if he receives no value. Lieutenant i acts as the commander in Algorithm OM(m - 1) to send the value Vi to each of the n-2 other lieutenants. 
