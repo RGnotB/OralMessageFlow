@@ -491,9 +491,11 @@
     let l_cycle = 0;
     let label, parent ='';
     let node_name = '';
+    let max = traitors.length;
     for(s of tmp.senders){
-      node_name+=s;
+      node_name+=s+',';
     }
+    let root = node_name;
     //create the lieutenant graph
     lieutenant_cy = cytoscape({
       container: document.getElementById('lieutenant_cy'),
@@ -518,7 +520,12 @@
     });
     //increase the cycle of the messages
     l_cycle++;
-    while(l_cycle <=  traitors.length) {
+    if(traitors.length > 3 && NUM_NODES > 10){
+      max = 3;
+      alert("There are too many nodes to load!\n" +
+              "They will only be created up to the third level of the information tree")
+    }
+    while(l_cycle <=  max) {
       for (let i = 1; i < node_messages.length; i++) {
         tmp = node_messages[i];
         if(l_cycle != traitors.length){
@@ -528,7 +535,7 @@
         }
         node_name = '';
         for(s of tmp.senders){
-          node_name+=s;
+          node_name+=s+',';
         }
         if(tmp.cycle == l_cycle){
           lieutenant_cy.add({
@@ -548,7 +555,7 @@
           });
           parent = '';
           for(let z = 0; z < (tmp.senders).length-1; z++){
-            parent+= tmp.senders[z];
+            parent+= tmp.senders[z]+",";
           }
           lieutenant_cy.add({
             data: {
@@ -571,15 +578,18 @@
 
     //add a event listener on nodes for simulate majority
     lieutenant_cy.on('click', 'node', function(e){
-      if(this.id().length - 1 != traitors.length){
           majority(this.id(), index);
-      }
+    });
+
+    cy.getElementById(root).position({
+      y: 500,
+      x: 23000
     });
   }
 
   //function to simulate majority
   function majority(id, index){
-    let cycle = id.length - 1;
+    let cycle = (id.length / 2) - 1;
     let max = traitors.length;
     let node_messages = messages[index];
     let node_name;
@@ -589,10 +599,10 @@
       for (let i = 0; i < node_messages.length; i++) {
           tmp = node_messages[i];
           label = '';
-          if(tmp.cycle == max){
+        if(tmp.cycle == max){
             node_name = '';
             for(s of tmp.senders){
-              node_name+=s;
+              node_name+=s+',';
             }
             for(let j = 0; j < id.length; j++){
               if(node_name[j] != id[j]){
