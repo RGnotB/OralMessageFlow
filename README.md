@@ -1,6 +1,6 @@
 # OralMessageFlow
 
-OralMesageFlow is a simulator that can execute the Oral Message algorithm (Lamport's algorithm for the Byzantine Generals Problem presented in [this article](http://doi.acm.org/10.1145/357172.357176)). 
+OralMesageFlow is a simulator with a graphic interface that can execute the Oral Message algorithm (Lamport's algorithm for the Byzantine Generals Problem presented in [this article](http://doi.acm.org/10.1145/357172.357176)). 
 
 This simulator can first of all executes the Oral Message algorithm writed in Java then, when it finish the execution, it will creates a JSON file that is possible to pass at the site OralMessage.html (writed in Javascript, HTML and CSS), that will show you the iterations of the execution.
 
