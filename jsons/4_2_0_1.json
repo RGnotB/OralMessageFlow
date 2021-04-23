@@ -1,0 +1,157 @@
+{
+  "num_nodes" : 4,
+  "traitors" : [ 2, 3 ],
+  "messages" : [ [ {
+    "value" : 1,
+    "cycle" : 0,
+    "finalValue" : 0,
+    "senders" : [ 0 ]
+  }, {
+    "value" : 0,
+    "cycle" : 1,
+    "finalValue" : 0,
+    "senders" : [ 0, 2 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 2, 1 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 2, 3 ]
+  }, {
+    "value" : 1,
+    "cycle" : 1,
+    "finalValue" : 0,
+    "senders" : [ 0, 1 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 1, 2 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 1, 3 ]
+  }, {
+    "value" : 0,
+    "cycle" : 1,
+    "finalValue" : 0,
+    "senders" : [ 0, 3 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 3, 1 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 3, 2 ]
+  } ], [ {
+    "value" : 1,
+    "cycle" : 0,
+    "finalValue" : 0,
+    "senders" : [ 0 ]
+  }, {
+    "value" : 0,
+    "cycle" : 1,
+    "finalValue" : 0,
+    "senders" : [ 0, 3 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 3, 1 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 3, 2 ]
+  }, {
+    "value" : 0,
+    "cycle" : 1,
+    "finalValue" : 0,
+    "senders" : [ 0, 2 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 2, 1 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 2, 3 ]
+  }, {
+    "value" : 1,
+    "cycle" : 1,
+    "finalValue" : 0,
+    "senders" : [ 0, 1 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 1, 2 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 1, 3 ]
+  } ], [ {
+    "value" : 1,
+    "cycle" : 0,
+    "finalValue" : 0,
+    "senders" : [ 0 ]
+  }, {
+    "value" : 0,
+    "cycle" : 1,
+    "finalValue" : 0,
+    "senders" : [ 0, 2 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 2, 3 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 2, 1 ]
+  }, {
+    "value" : 0,
+    "cycle" : 1,
+    "finalValue" : 0,
+    "senders" : [ 0, 3 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 3, 1 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 3, 2 ]
+  }, {
+    "value" : 1,
+    "cycle" : 1,
+    "finalValue" : 0,
+    "senders" : [ 0, 1 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 1, 3 ]
+  }, {
+    "value" : 0,
+    "cycle" : 2,
+    "finalValue" : 0,
+    "senders" : [ 0, 1, 2 ]
+  } ] ],
+  "commander_value" : 1,
+  "final_value" : 0
+}

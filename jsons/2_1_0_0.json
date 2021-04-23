@@ -1,0 +1,17 @@
+{
+  "num_nodes" : 2,
+  "traitors" : [ 1 ],
+  "messages" : [ [ {
+    "value" : 0,
+    "cycle" : 0,
+    "finalValue" : 1,
+    "senders" : [ 0 ]
+  }, {
+    "value" : 1,
+    "cycle" : 1,
+    "finalValue" : 1,
+    "senders" : [ 0, 1 ]
+  } ] ],
+  "commander_value" : 0,
+  "final_value" : 1
+}

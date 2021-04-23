@@ -1,0 +1,37 @@
+{
+  "num_nodes" : 3,
+  "traitors" : [ 0 ],
+  "messages" : [ [ {
+    "value" : 1,
+    "cycle" : 0,
+    "finalValue" : 1,
+    "senders" : [ 0 ]
+  }, {
+    "value" : 0,
+    "cycle" : 1,
+    "finalValue" : 0,
+    "senders" : [ 0, 2 ]
+  }, {
+    "value" : 1,
+    "cycle" : 1,
+    "finalValue" : 1,
+    "senders" : [ 0, 1 ]
+  } ], [ {
+    "value" : 0,
+    "cycle" : 0,
+    "finalValue" : 0,
+    "senders" : [ 0 ]
+  }, {
+    "value" : 1,
+    "cycle" : 1,
+    "finalValue" : 1,
+    "senders" : [ 0, 1 ]
+  }, {
+    "value" : 0,
+    "cycle" : 1,
+    "finalValue" : 0,
+    "senders" : [ 0, 2 ]
+  } ] ],
+  "commander_value" : 0,
+  "final_value" : -1
+}

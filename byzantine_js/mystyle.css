@@ -82,6 +82,12 @@ body {
     font-style: italic;
     text-align: center;
 }
+#stop{
+    position: absolute;
+    display:none;
+    top: 5%;
+    width: 120px;
+}
 #skipMessages{
     position: absolute;
     display:none;
